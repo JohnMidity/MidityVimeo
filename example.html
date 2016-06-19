@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+    <head>
+        <title>MidityVimeo Subtitles demo</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js" ></script>
+        <script type="text/javascript" src="MidityVimeo.js" ></script>
+        <style>
+            .subtitles {
+                font-family: sans-serif;
+                font-weight: bold;
+                width: 500px;
+                height: 50px;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- include the standard Vimeo embed thing here /-->
+        <object width="500" height="281">
+            <param name="allowfullscreen" value="true" />
+            <param name="allowscriptaccess" value="always" />
+            <param name="movie" value="http://vimeo.com/moogaloop.swf?clip_id=9594618&amp;server=vimeo.com&amp;show_title=1&amp;show_byline=1&amp;show_portrait=1&amp;color=00adef&amp;fullscreen=1" />
+            <embed src="http://vimeo.com/moogaloop.swf?clip_id=9594618&amp;server=vimeo.com&amp;show_title=1&amp;show_byline=1&amp;show_portrait=1&amp;color=00adef&amp;fullscreen=1" type="application/x-shockwave-flash" allowfullscreen="true" allowscriptaccess="always" width="500" height="281">
+            </embed>
+        </object>
+        <!-- create a div to hold the subtitles for every (subtitled) movie on your page /-->
+        <div id="subtitles_9594618" class="subtitles"></div>
+        <!-- create the subtitles for your movie(s) /-->
+        <script type="text/javascript">
+            var subtitles = [
+                [1,10, "<B>Visit De Kift at <a href=\"http://www.dekift.nl\">dekift.nl</B>"],
+                [18, 24, "I am building an organ where we can sit in."],
+                [25, 28, "That's the idea."],
+                [29, 34, "A couple of instruments need to be controlled by hand"],
+                [45, 49, "The only thing a bicycle pump can do of course is: blowing air"],
+                [49, 53, "I'm working on the nozzle. Not of a trumpet..."],
+                [53, 56, "... a nozzle that can make a sound."],
+                [56, 59, "The nozzle of a trumpet does not make a sound by itself..."],
+                [59, 63, "...you make a sound with your lips."],
+                [63, 66, "This is a simple little horn..."],
+                [66, 68, "...with a vibrating thing..."],
+                [69, 72, "... you won't find that in a trumpet."],
+                [73, 78, "This is an autonomous horning horn."],
+                [82, 85, "It's built with a airpump..."],
+                [86, 87, "... for your airbed..."],
+                [88, 89, "... or your seal ..."],
+                [138, 142, "What you want is a clamp that covers the whole length."],
+                [142, 146, "That can be secured on several places with screws."],
+                [147, 153, "Now I have three of these things secured with screws with clamps."],
+                [153, 155, "so now it can not.."],
+                [155, 157, "Now it must be clamping"],
+                [164, 166, "Now it is well secured."],
+                [186, 190, "One of the properties of a vacuum cleaner is that it doesn't blow..."],
+                [190, 192, "...but it sucks."],
+                [218, 220, "The autoharp"],
+                [221, 225, "which is a harp for people who cannot play harp"],
+                [226, 228, "It has buttons"],
+                [230, 232, "what these buttons do is.."],
+                [234, 238, "the strings that do not belong to a particular chord are dimmed"],
+                [238,243, "So if I want to have the C-Major chord, I have a button here for C-Major"],
+                [244, 246, "and then"],
+                [246, 249, "you have to touch it with this hand"],
+                [250, 253, "you'll hear the C-Major chord"],
+                [254, 257, "I wanted for the new music.."],
+                [257, 258.5, "a lot of that kind..."],
+                [258.5, 260, "not a lot, but.."],
+                [260, 263, "I was trying to use that kind of instrument"],
+                [263, 266, "like zither or ...."],
+                [266.5, 269, "to make something with"],
+                [269, 271, "Pim our guitarplayer said.."],
+                [271, 273, "'There are so called Autoharps..'"],
+                [273, 276, "..which have several chords'"],
+                [276, 278, "So I searched the Internet,"],
+                [280, 282, "where I found this machine."],
+                [290,290,""],
+            ];
+            /* let the MidityVimeoLib take care of showing the subtitles for clip_id 9594618 in the div subtitles_9594618 */
+            MidityVimeoLib.showSubtitles(9594618, subtitles, "subtitles_9594618");
+        </script>
+    </body>
+</html>
