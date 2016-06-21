@@ -1,6 +1,6 @@
 /*
  * MidityVimeoLib for embedding Vimeo clips and adding your subtitles
- * Copyright (C) 2010  Ing. J. Zandbergen, www.midity.com
+ * Copyright (C) 2010, 2016  Ing. J. Zandbergen, www.midity.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,143 +19,128 @@
 /*
  * 2010 03 12 John Zandbergen
  *      Version 1.0: with the ability to have several movies on 1 page
+ *      
+ * 2016 06 19 John Zandbergen Version 2.0: Major rewrite, now builds on top of the Vimeo Player API. 
+ * For information about the Vimeo Player API see: 
+ * 		https://github.com/vimeo/player.js
  */
-var MidityVimeoLib = {
-    /* add an event to an object */
-    addEvent: function() {
-        if (window.addEventListener) {
-            return function(el, type, fn) {
-                el.addEventListener(type, fn, false);
-            };
-        } else if (window.attachEvent) {
-            return function(el, type, fn) {
-                var f = function() {
-                    fn.call(el, window.event);
-                };
-                el.attachEvent('on' + type, f);
-            };
-        }
-    }(),
+(function(window) {
+	function defineMidityVimeoLib() {
+		var MidityVimeoLib = {};
 
-    /* Initialize the library, which searches the page to make all moogaloop objects scriptable */
-    initialize: function(){
-        /* Get all embedded objects, we will scan through them to find the vimeo moogaloop.swf's */
-        var objecten = document.getElementsByTagName("embed");
-        var swfObjects = new Array();
-        for(var i=0; i<objecten.length; i++)
-        {
-            if ( objecten[i].src.substr(0, "http://vimeo.com/moogaloop.swf".length) == "http://vimeo.com/moogaloop.swf")
-            {
-                // We found a moogaloop swf object
-                swfObjects[swfObjects.length] = objecten[i];
-            }
-        }
+		/*
+		 * The version of this library, might be helpful when future changes are
+		 * done
+		 */
+		MidityVimeoLib.version = 2.0;
 
-        /* now we know the objects, let's replace them with loaded items */
-        for(i=0; i<swfObjects.length; i++)
-        {
-            MidityVimeoLib.replace(swfObjects[i]);
-        }
-    },
+		/*
+		 * The subtitles array will store the subtitles of all the Vimeo clips
+		 * currently loaded.
+		 */
+		MidityVimeoLib.subtitles = [];
 
-    /* Replace an embedded moogaloop with a scriptable moogaloop */
-    replace: function(embedObject){
-        /* let's replace the embedded movie with a dynamically loaded one */
-        /* first parse the data of the embedded swf */
-        var parsedURI = MidityVimeoLib.parseURI(embedObject.src);
+		/*
+		 * This is the public function to be called when subtitles are needed
+		 * for a clip
+		 */
+		MidityVimeoLib.showSubtitles = function(clip_id, newSubtitles, div_id) {
+			MidityVimeoLib.subtitles[clip_id] = {
+				"theDiv" : div_id,
+				"theSubtitles" : newSubtitles
+			};
+		}
 
-        /* first create a new div in which we are placing the new swf */
-        var theNewDiv = document.createElement('div');
-        theNewDiv.setAttribute("id", "MidityVimeo_" + parsedURI["options"]["clip_id"]);
-        var width = embedObject.getAttribute("width");
-        var height = embedObject.getAttribute("height");
+		/*
+		 * This is called when the page is fully loaded, so we can add the event
+		 * handlers for every vimeo iframe
+		 */
+		MidityVimeoLib.initialize = function() {
+			/* get all the iframe objects */
+			var iframeobjects = document.querySelectorAll('iframe');
 
-        /*
-         * everything is prepared. But due to the difference of objects in IE and others, we need
-         * different approaches to replace the object.
-         */
-        if (embedObject.parentNode.tagName.toUpperCase() == "OBJECT")
-        {
-            /* We need to replace the parent node of the embed */
-            embedObject.parentNode.parentNode.replaceChild(theNewDiv, embedObject.parentNode);
-        }else{
-            /* we need to replace the object itself */
-            embedObject.parentNode.replaceChild(theNewDiv, embedObject);
-        }
+			/*
+			 * Add our playing event handler to all iframes, some wil fail but
+			 * we'll catch the errors
+			 */
+			for (var i = 0; i < iframeobjects.length; i++) {
+				var item = iframeobjects[i];
+				MidityVimeoLib.addPlayingEvents(item, i);
+			}
+			;
+		}
 
-        var flashvars = {
-            clip_id: parsedURI["options"]["clip_id"],
-            show_portrait: parsedURI["options"]["show_portrait"],
-            show_byline: parsedURI["options"]["show_byline"],
-            show_title: parsedURI["options"]["show_title"],
-            js_api: 1, 
-            js_onLoad: 'MidityVimeoLib.loaded',
-            js_swf_id: parsedURI["options"]["clip_id"]
-        };
-        var fullScreenAllowed = (parsedURI["options"]["fullscreen"]==1?'true':'false');
-        var params = {
-            allowscriptaccess: 'always',
-            allowfullscreen: fullScreenAllowed
-        };
+		/* adds an event handler to a single vimeo iframe */
+		MidityVimeoLib.addPlayingEvents = function(item, index) {
+			try {
+				/* Try to link the player to the movie */
+				var player = new Vimeo.Player(item);
 
-        var attributes = {};
+				/* Let's add our event handler to the movie
+				 * and also add a clip_id attribute to the iframe so we know
+				 * which movie triggers events later on
+				 */
+				player.getVideoId().then(function(id) {
+					/*
+					 * let's add an eventhandler if we have subtitles for a
+					 * movie with this id
+					 */
+					if (MidityVimeoLib.subtitles[id]) {
+						item.clip_id = id;
+						player.on('timeupdate', MidityVimeoLib.DuringPlaying);
+					}
+				}).catch(function(error) {});
+			} catch (e) {
+				/* this was not a vimeo iframe.... */
+			}
+		}
 
-        swfobject.embedSWF(parsedURI["page"], "MidityVimeo_" + parsedURI["options"]["clip_id"], width, height, "9.0.0","expressInstall.swf", flashvars, params, attributes);
-    },
+		/* This function is called during play. It shows the subtitle */
+		MidityVimeoLib.DuringPlaying = function(data) {
+			try {
+				/* we added the clip_id to the iframe so we can read it fast */
+				var clip_id = this.element.clip_id;
 
-    /* parse the url to a structured object */
-    parseURI: function(URI){
-        URI = decodeURI(URI);
-        var r = URI.split("?");
-        var keyvalues = r[1].split("&");
-        var parsed = {
-            "page":r[0],
-            "options":{}
-        };
-        for(var i=0; i<keyvalues.length; i++)
-        {
-            var pair = keyvalues[i].split("=");
-            parsed["options"][pair[0]] = pair[1];
-        }
-        return parsed;
-    },
+				/* the data holds the position of the movie player in seconds */
+				var time = data.seconds;
 
-    /* this function is called after the newly embedded moogaloop is ready */
-    loaded: function(swf_id){
-        theSWF = document.getElementById("MidityVimeo_" + swf_id);
-        theSWF.api_addEventListener('onProgress', 'MidityVimeoLib.onPlaying');
-    },
+				/* if we have subtitles for this movie, let's show them */
+				if (MidityVimeoLib.subtitles[clip_id]) {
+					var subtitles = MidityVimeoLib.subtitles[clip_id].theSubtitles;
+					var theDiv = MidityVimeoLib.subtitles[clip_id].theDiv;
+					for (var i = 0; i < subtitles.length; i++) {
+						if ((subtitles[i][0] < time) && (subtitles[i][1] > time)) {
+							document.getElementById(theDiv).innerHTML = subtitles[i][2];
+							return;
+						} else if (subtitles[i][0] > time) {
+							document.getElementById(theDiv).innerHTML = "";
+						}
+					}
+				}
+			} catch (err) {
+			}
+		}
 
-    /* these are functions and variables to support subtitles */
-    /* the subtitles are stored in here */
-    subtitles: {},
+		/* Our 'reliable' function to add the onload listener */
+		MidityVimeoLib.addEvent = function(el, type, fn) {
+			if (el.addEventListener) {
+				return el.addEventListener(type, fn, false);
+			} else if (window.attachEvent) {
+				var f = function() {
+					fn.call(el, window.event);
+				};
+				return el.attachEvent('on' + type, f);
+			}
+		}
 
-    /* Call this function to attach subtitles to a movie */
-    showSubtitles: function(clip_id, newSubtitles, div_id){
-        MidityVimeoLib.subtitles[clip_id] = {
-            "theDiv": div_id,
-            "theSubtitles": newSubtitles
-        };
-    },
+		return MidityVimeoLib;
+	}
 
-    /* This function is called during play. It shows the subtitle */
-    onPlaying: function(time, clip_id){
-        /* TODO: review code */
-        if (MidityVimeoLib.subtitles[clip_id]){
-            var subtitles = MidityVimeoLib.subtitles[clip_id].theSubtitles;
-            var theDiv = MidityVimeoLib.subtitles[clip_id].theDiv;
-            for(var i=0; i<subtitles.length; i++)
-            {
-                if ((subtitles[i][0] < time ) && (subtitles[i][1] > time))
-                {
-                    document.getElementById(theDiv).innerHTML = subtitles[i][2];
-                    return;
-                } else if (subtitles[i][0] > time ){
-                    document.getElementById(theDiv).innerHTML = "";
-                }
-            }
-        }
-    }
-}
+	/* load the library, we're going to do some initialisation after page-load */
+	if (typeof (MidityVimeoLib) === 'undefined') {
+		window.MidityVimeoLib = defineMidityVimeoLib();
 
-MidityVimeoLib.addEvent(window, "load", MidityVimeoLib.initialize);
+		/* Initialize after the page is loaded */
+		window.MidityVimeoLib.addEvent(window, "load", MidityVimeoLib.initialize);
+	}
+})(window);

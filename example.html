@@ -1,31 +1,26 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!DOCTYPE html>
 <html>
     <head>
-        <title>MidityVimeo Subtitles demo</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js" ></script>
+		<script type="text/javascript" src="https://player.vimeo.com/api/player.js"></script>
         <script type="text/javascript" src="MidityVimeo.js" ></script>
         <style>
             .subtitles {
                 font-family: sans-serif;
                 font-weight: bold;
-                width: 500px;
+                width: 640px;
                 height: 50px;
                 text-align: center;
             }
         </style>
     </head>
+    
     <body>
         <!-- include the standard Vimeo embed thing here /-->
-        <object width="500" height="281">
-            <param name="allowfullscreen" value="true" />
-            <param name="allowscriptaccess" value="always" />
-            <param name="movie" value="http://vimeo.com/moogaloop.swf?clip_id=9594618&amp;server=vimeo.com&amp;show_title=1&amp;show_byline=1&amp;show_portrait=1&amp;color=00adef&amp;fullscreen=1" />
-            <embed src="http://vimeo.com/moogaloop.swf?clip_id=9594618&amp;server=vimeo.com&amp;show_title=1&amp;show_byline=1&amp;show_portrait=1&amp;color=00adef&amp;fullscreen=1" type="application/x-shockwave-flash" allowfullscreen="true" allowscriptaccess="always" width="500" height="281">
-            </embed>
-        </object>
+        <iframe src="https://player.vimeo.com/video/9594618" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+        
         <!-- create a div to hold the subtitles for every (subtitled) movie on your page /-->
         <div id="subtitles_9594618" class="subtitles"></div>
+
         <!-- create the subtitles for your movie(s) /-->
         <script type="text/javascript">
             var subtitles = [
